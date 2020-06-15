@@ -9,6 +9,7 @@ const START_NODE_ROW = 10;
 const START_NODE_COL = 15;
 const FINISH_NODE_ROW = 10;
 const FINISH_NODE_COL = 35;
+const THRESHOLD = 0.1;
 
 class PathfindingVisualizer extends Component{
     constructor(props){
@@ -76,15 +77,62 @@ class PathfindingVisualizer extends Component{
         this.animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
     }
 
+    animateMaze(){
+        const nodesWithWall = this.generateMaze();
+        for(let i = 0;i < nodesWithWall.length; i++){
+            if(!nodesWithWall[i].isStart && !nodesWithWall[i].isFinish){
+                setTimeout(() => {
+                    const node = nodesWithWall[i];
+                    document.getElementById(`node-${node.row}-${node.col}`).className =
+                    'node node-wall';
+                }, 20*i);
+            }
+        }
+        // setTimeout(() => {
+        //     console.log('[animate function]',data.grid);
+        // }, 20*nodesWithWall.length);    
+    }
+
+    generateMaze(){
+        const {grid} = this.state;
+        const nodesHavingWall = [];
+        for(let row = 0; row < 20; row++){
+            for(let col = 0; col < 50; col++){
+                if(row === 0 || col === 0 || row === 19 || col === 49){
+                    grid[row][col].isWall = true;
+                    nodesHavingWall.push(grid[row][col]);
+                } else if(row%2 === 0 && col%2 === 0){
+                    if(Math.random() > THRESHOLD){
+                        grid[row][col].isWall = true;
+                        nodesHavingWall.push(grid[row][col]);
+
+                        let a = Math.random() < 0.5 ? 0 : (Math.random() < .5 ? -1 : 1);
+                        let b = a !== 0 ? 0 : (Math.random() < .5 ? -1 : 1);
+
+                        grid[row + a][col + b].isWall = true;
+                        nodesHavingWall.push(grid[row + a][col + b]);
+                    }
+                } 
+            }
+        }
+        return nodesHavingWall;
+    }
+    
     render(){
         const {grid, mouseIsPressed} = this.state; 
-
+        // console.log('[render function]');
         return(
             <>
                 <h1>Path finding Visualizer</h1>
-                <button onClick={() => this.visualizeDijkstra()}>
-                    Visualize Dijkstra's Algorithm
-                </button>
+                <ul>
+                    <button onClick={() => this.visualizeDijkstra()}>
+                        Visualize Dijkstra's Algorithm
+                    </button>
+                    <button onClick={() => this.animateMaze()}>
+                        Generate Maze
+                    </button>
+                </ul>
+                
                 <div className="grid">
                     {grid.map((row, rowIdx) => {
                         return (
